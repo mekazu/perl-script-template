@@ -1,0 +1,119 @@
+#!/usr/bin/env perl
+
+=encoding utf8
+
+=head1 build_perl_script
+
+=head1 DESCRIPTION
+
+Builds a template for a script, much like this one.
+
+=head1 SYNOPSIS
+
+# Build a perl script with your desired default options
+bin/build_perl_script --file bin/profile_builder.pl --description 'This is a script that builds a personal profile' --flag 'verbose=Makes the script more noisy' --string 'name=Your name' --string 'eye-color=The colour of your eyes' --int 'height=Your height in cm' | perltidy > bin/profile_builder
+
+# Make the script exectable
+chmod 755 bin/profile_builder
+
+# Add the bin dir to the path (or write the script to a directory on the path)
+export PATH=$PATH:`pwd`/bin
+
+# Execute the script
+profile_builder --name Tim --eye-color brown --verbose
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<flag> Flags that can be passed to the script.
+
+=item B<string> Strings that can be passed to the script.
+
+=item B<int> Integers that can be passed to the script.
+
+=back
+
+=cut
+
+use strict;
+use warnings;
+use utf8;
+
+use Getopt::Long qw(GetOptions :config auto_help);
+use Pod::Usage qw(pod2usage);
+
+my ( $file, $description, %flag, %string, %int );
+GetOptions(
+    'file=s'        => \$file,
+    'description=s' => \$description,
+    'flag=s'        => \%flag,
+    'string=s'      => \%string,
+    'int=s'         => \%int
+) or pod2usage( -verbose => 1 );
+
+$description =~ s/([^.])$/$1./;
+
+my ( @synopses, @options, @variables, @map );
+push @synopses, map { "--$_" } sort keys %flag;
+push @synopses, map { "--$_ <string>" } sort keys %string;
+push @synopses, map { "--$_ <int>" } sort keys %int;
+my $synopsis = join " ", @synopses;
+
+push @options, map { "=item B<$_> $flag{$_}" } sort keys %flag;
+push @options, map { "=item B<$_> $string{$_}" } sort keys %string;
+push @options, map { "=item B<$_> $int{$_}" } sort keys %int;
+my $options = join "\n\n", map { s/([^.])$/$1./r } @options;
+
+push @variables, map { "\$$_" } map { s/-/_/r } sort keys %flag;
+push @variables, map { "\$$_" } map { s/-/_/r } sort keys %string;
+push @variables, map { "\$$_" } map { s/-/_/r } sort keys %int;
+my $variables = join ", ", @variables;
+
+my @vars = @variables;
+push @map, map { "'$_' => \\@{[shift @vars]}" } sort keys %flag;
+push @map, map { "'$_=s' => \\@{[shift @vars]}" } sort keys %string;
+push @map, map { "'$_=i' => \\@{[shift @vars]}" } sort keys %int;
+my $options_map = join ",\n    ", @map;
+
+my $inputs = join ", ", map { "@{[s/^\$//r]} => $_" } @variables;
+
+print <<"EOTEMPLATE";
+#!/usr/bin/env perl
+
+=encoding utf8
+
+=head1 $file
+
+=head1 DESCRIPTION
+
+$description
+
+=head1 SYNOPSIS
+
+$file $synopsis
+
+=head2 OPTIONS
+
+=over 4
+
+$options
+
+=back
+
+=cut
+
+use strict;
+use warnings;
+use utf8;
+
+use Getopt::Long qw(GetOptions :config auto_help);
+use Pod::Usage qw(pod2usage);
+use Data::Dump qw(pp);
+
+my ($variables);
+GetOptions ($options_map) or pod2usage( -verbose => 1 );
+
+print "You passed: \@{[ pp { $inputs } ]}\\n" if \$verbose;
+
+EOTEMPLATE
