@@ -10,17 +10,17 @@ Builds a template for a script, much like this one.
 
 =head1 SYNOPSIS
 
-# Build a perl script with your desired default options
-bin/build_perl_script --file bin/profile_builder.pl --description 'This is a script that builds a personal profile' --flag 'verbose=Makes the script more noisy' --string 'name=Your name' --string 'eye-color=The colour of your eyes' --int 'height=Your height in cm' | perltidy > bin/profile_builder
+ # Build a perl script with your desired default options
+ bin/build_perl_script --file bin/profile_builder --description 'This is a script that builds a personal profile' --flag 'verbose=Makes the script more noisy' --string 'name=Your name' --string 'eye-color=The colour of your eyes' --int 'height=Your height in cm' | perltidy > bin/profile_builder
 
-# Make the script exectable
-chmod 755 bin/profile_builder
+ # Make the script exectable
+ chmod 755 bin/profile_builder
 
-# Add the bin dir to the path (or write the script to a directory on the path)
-export PATH=$PATH:`pwd`/bin
+ # Add the bin dir to the path (or write the script to a directory on the path)
+ export PATH=$PATH:`pwd`/bin
 
-# Execute the script
-profile_builder --name Tim --eye-color brown --verbose
+ # Execute the script
+ profile_builder --name Tim --eye-color brown --verbose
 
 =head2 OPTIONS
 
